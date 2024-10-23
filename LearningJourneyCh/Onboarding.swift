@@ -44,7 +44,7 @@ struct Onboarding: View {
                 }
                 VStack {
                     Text ("I want to learn")
-                        .font(.headline)
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(Color.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.leading)
