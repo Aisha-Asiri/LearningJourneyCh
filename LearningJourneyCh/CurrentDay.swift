@@ -9,15 +9,40 @@ import SwiftUI
 
 struct CurrentDay: View {
     @State private var selectedDay: String = ""
+    @State private var learningGoal: String = "Swift"
     @State private var streakCount: Int = 10
     @State private var freezeCount: Int = 2
     @State private var currentDate: Date = Date() // The current date
-    @State private var learningGoal: String = "Swift"
     @State private var selectedDate: Date = Date()  // Keep track of selected date as Date
     @State private var currentWeekStart: Date = Calendar.current.startOfWeek(for: Date())!
     // New state variable to track if today is logged as learned
     @State private var isLoggedToday: Bool = false
-    @State private var isFreezeDayUsed: Bool = false
+    @State private var isFrozen: Bool = false
+    @State private var loggedDates: Set<Date> = [] // Track logged dates as learned
+    @State private var frozenDates: Set<Date> = [] // Track frozen dates
+    @AppStorage("selectedTimeFrame") var selectedTimeFrame: String = "Month"
+
+    private var maxFreezesAllowed: Int {
+        switch selectedTimeFrame {
+        case "Week":
+            return 2
+        case "Month":
+            return 6
+        case "Year":
+            return 60
+        default:
+            return 6 // Default to "Month"
+        }
+    }
+
+    
+    private var isSelectedDateFrozen: Bool {
+        frozenDates.contains(selectedDate)
+    }
+
+    private var isSelectedDateLogged: Bool {
+        loggedDates.contains(selectedDate)
+    }
     
     // Computed properties for current month and year
     private var currentMonth: String {
@@ -59,8 +84,8 @@ struct CurrentDay: View {
                         // NavigationLink for the flame image
                         NavigationLink(destination: updateLearningGoal()) {
                             Text ("🔥")
-                            .fontWeight(.regular)
-                            .frame(width: 25, height: 32)
+                                .fontWeight(.regular)
+                                .frame(width: 25, height: 32)
                                 .background(
                                     Color("Gray5")
                                         .frame(width: 44, height: 44)
@@ -73,7 +98,7 @@ struct CurrentDay: View {
                     
                     
                     // Calendar Section
-                    VStack {
+                    VStack(spacing:12) {
                         // Calendar
                         HStack {
                             Text("\(currentMonth) \(currentYear)")
@@ -102,7 +127,7 @@ struct CurrentDay: View {
                             }
                             .font(.system(size: 20, weight: .medium))
                         }
-                        .padding(.horizontal)
+                        .padding([.top, .leading, .trailing])
                         
                         
                         // Days of the Week Header
@@ -111,7 +136,7 @@ struct CurrentDay: View {
                                 Text(day)
                                     .font(.subheadline)
                                     .foregroundColor(isToday(day) ? .white : Color("Gray3"))
-                                                .fontWeight(isToday(day) ? .bold : .regular)
+                                    .fontWeight(isToday(day) ? .bold : .regular)
                                     .frame(maxWidth: .infinity)
                             }
                         }
@@ -119,18 +144,25 @@ struct CurrentDay: View {
                         .font(.system(size: 13, weight: .semibold))
                         
                         // Days of the current week
-                        HStack {
+                        HStack(spacing: 12) {
                             ForEach(0..<7, id: \.self) { offset in
                                 let dayDate = Calendar.current.date(byAdding: .day, value: offset, to: currentWeekStart)!
-                                DateCircle(dayDate: dayDate, isSelected: Calendar.current.isDate(dayDate, inSameDayAs: selectedDate), isLoggedToday: isLoggedToday, isFreezeDayUsed: isFreezeDayUsed)
-                                    .onTapGesture {
-                                        selectedDate = dayDate
-                                    }
+                                DateCircle(
+                                    dayDate: dayDate,
+                                    isSelected: Calendar.current.isDate(dayDate, inSameDayAs: selectedDate),
+                                    isLogged: loggedDates.contains(dayDate),
+                                    isFrozen: frozenDates.contains(dayDate)
+                                )
+                                .onTapGesture {
+                                    selectedDate = dayDate
+                                }
                             }
                         }
                         Divider()
+                            .frame(height: 1)
                             .overlay(Color("Gray3"))
                             .padding(.horizontal)
+                        
                         
                         
                         // Streak & Freeze Count
@@ -144,6 +176,7 @@ struct CurrentDay: View {
                             }
                             .frame(maxWidth: .infinity)
                             Divider()
+                                .frame(width: 1)
                                 .overlay(Color("Gray3"))
                             
                             VStack {
@@ -167,54 +200,54 @@ struct CurrentDay: View {
                     // Log Button
                     Button(action: {
                         // Action for log button
-                        if !isLoggedToday {
-                            isLoggedToday = true
-                            streakCount += 1
-                            // Disable freeze button when log button is pressed
-                            isFreezeDayUsed = true
-                        }
+                        if !isSelectedDateLogged && !isSelectedDateFrozen {
+                                loggedDates.insert(selectedDate)
+                                streakCount += 1
+                            }
                     }) {
-                        Text(isLoggedToday ? "Learned Today" : "Log today\nas Learned")
-                            .font(.system(size: 41, weight: .semibold))
-                            .foregroundColor(isLoggedToday ? .orange : .black)
-                            .multilineTextAlignment(.center)
-                            .frame(width: 320, height: 320)
-                            .background(Circle().fill(isLoggedToday ? Color.clear : Color.orange))
-                            .overlay(
-                                Circle()
-                                    .stroke(isLoggedToday ? Color.orange : Color.clear, lineWidth: 3)
-                            )
+                        Text(isSelectedDateFrozen ? "Day Freezed" : (isSelectedDateLogged ? "Learned\nToday" : "Log today\nas Learned"))
+                                .font(.system(size: 41, weight: .semibold))
+                                .foregroundColor(isSelectedDateFrozen ? .blue : (isSelectedDateLogged ? .orange : .black))
+                                .multilineTextAlignment(.center)
+                                .frame(width: 320, height: 320)
+                                .background(
+                                    Circle()
+                                        .fill(isSelectedDateFrozen ? Color.blue.opacity(0.3) : (isSelectedDateLogged ? Color.orange.opacity(0.3) : Color.orange))
+                                )
+
                     }
+                    .disabled(isSelectedDateLogged || isSelectedDateFrozen)
                     .padding(.top)
                     
                     // Freeze Button
                     VStack {
                         Button(action: {
-                            // Action for freeze button
-                            if !isFreezeDayUsed {
-                                isFreezeDayUsed = true
-                                freezeCount += 1
-                            }
+                                if !isSelectedDateFrozen && !isSelectedDateLogged && freezeCount < maxFreezesAllowed {
+                                    frozenDates.insert(selectedDate)
+                                    freezeCount += 1
+                                }
                         }) {
-                            Text(isFreezeDayUsed ? "Day Freezed" : "Freeze day")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(isFreezeDayUsed ? .blue : .blue)
-                                .padding()
-                                .frame(width: 200)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 15)
-                                        .fill(isFreezeDayUsed ? Color("Gray5") : Color("light blue"))
-                                )
+                            Text("Freeze Day")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor((isSelectedDateLogged || isSelectedDateFrozen || freezeCount >= maxFreezesAllowed) ? .gray : .blue)
+                                        .padding()
+                                        .frame(width: 200)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 15)
+                                                .fill((isSelectedDateLogged || isSelectedDateFrozen || freezeCount >= maxFreezesAllowed) ? Color("Gray5") : Color("light blue"))
+                                        )
+                            
                         }
-                        .disabled(isFreezeDayUsed) // Disable button after use
+                        .disabled(isSelectedDateLogged || isSelectedDateFrozen || freezeCount >= maxFreezesAllowed)
 
-                        Text("2 out of 6 freezes used")
-                            .font(.caption)
-                            .foregroundColor(Color("Gray3"))
-                    }
+                            Text("\(freezeCount) out of \(maxFreezesAllowed) freezes used")
+                                .font(.caption)
+                                .foregroundColor(Color("Gray3"))
+                        }
+                          
                     
                     Spacer()
-                }
+                } //VStack
             } //ZStack
         }
         .onAppear {
@@ -231,43 +264,21 @@ struct CurrentDay: View {
         return dateFormatter.string(from: Date())
     }
 }
-struct DayCircle: View {
-    let day: Int
-    @Binding var selectedDay: String
-    let currentDay: Int
-    
-    var body: some View {
-        VStack {
-            Text("\(day)")
-                .font(.headline)
-                .foregroundColor(day == currentDay ? .blue : .gray)
-                .padding(10)
-                .background(
-                    Circle()
-                        .fill(day == currentDay ? Color.orange.opacity(0.7) : Color.clear)
-                )
-                .onTapGesture {
-                    selectedDay = "Day \(day)" // Update selected day based on the tapped day
-                }
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
+
 struct DateCircle: View {
     let dayDate: Date
     let isSelected: Bool
-    let isLoggedToday: Bool
-    let isFreezeDayUsed: Bool
-    
+    let isLogged: Bool
+    let isFrozen: Bool
+
     var body: some View {
         Text("\(Calendar.current.component(.day, from: dayDate))")
             .foregroundColor(isToday(dayDate) ? .orange : .white)
             .font(.headline)
             .padding(.horizontal, 8)
-    
             .background(
                 Circle()
-                    .fill(isLoggedToday && isToday(dayDate) ? Color.orange.opacity(0.7) : Color.clear)
+                    .fill(isLogged ? Color.orange.opacity(0.7) : (isFrozen ? Color.blue.opacity(0.7) : Color.clear))
             )
     }
 
@@ -275,6 +286,7 @@ struct DateCircle: View {
         return Calendar.current.isDateInToday(date)
     }
 }
+    
 
 extension Calendar {
     func startOfWeek(for date: Date) -> Date? {
