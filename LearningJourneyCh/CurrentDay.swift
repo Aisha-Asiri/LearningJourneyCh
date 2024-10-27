@@ -21,6 +21,7 @@ struct CurrentDay: View {
     @State private var loggedDates: Set<Date> = [] // Track logged dates as learned
     @State private var frozenDates: Set<Date> = [] // Track frozen dates
     @AppStorage("selectedTimeFrame") var selectedTimeFrame: String = "Month"
+    @State private var lastLoggedDate: Date = Date() // Keep track of the last date logged as learned
 
     private var maxFreezesAllowed: Int {
         switch selectedTimeFrame {
@@ -62,6 +63,13 @@ struct CurrentDay: View {
         let calendar = Calendar.current
         return calendar.component(.day, from: currentDate)
     }
+    // Reset streak if more than 32 hours have passed since the last logged day
+        private func checkStreakTimeout() {
+            if Date().timeIntervalSince(lastLoggedDate) > 32 * 60 * 60 {
+                streakCount = 0
+            }
+        }
+    
     var body: some View {
         NavigationView {
             ZStack {
