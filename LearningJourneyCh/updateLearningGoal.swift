@@ -15,11 +15,13 @@ struct updateLearningGoal: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
+        
             VStack(alignment: .leading) {
                 Text ("I want to learn")
                     .foregroundColor(.white)
                     .font(.system(size: 16, weight: .medium))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 50)
                 TextField("Swift", text: $learningGoal)
                     .foregroundColor(.gray)
                     .font(.system(size:17, weight: .regular))
@@ -72,13 +74,34 @@ struct updateLearningGoal: View {
                     } //HStack
                 Spacer()
                 } //VStack
-            .padding()
+            .padding([.top, .leading])
                 } //ZStack
+        
+        .toolbar {
+               ToolbarItem(placement: .navigationBarLeading) {
+                   HStack (spacing: 50) {
+                       Text("Learning goal")
+                           .font(.system(size: 17, weight: .semibold))
+                           .foregroundColor(.white)
+                           .frame(width: 108, height: 22)
+                       
+                       Button {
+                           // Action
+                       } label: {
+                           Text("Update")
+                               .foregroundColor(.orange)
+                               .frame(width: 59, height: 22)
+                               .font(.system(size: 17, weight: .semibold))
+                       }
+                       .padding(.leading, 20) // Adjust if needed
+                       
+                   }
+               }
+           }
+           .navigationBarTitleDisplayMode(.inline)
+       }
             }
-        }
     
-
-
 #Preview {
     updateLearningGoal()
 }
