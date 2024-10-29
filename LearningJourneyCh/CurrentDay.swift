@@ -283,7 +283,7 @@ struct DateCircle: View {
 
     var body: some View {
         Text("\(Calendar.current.component(.day, from: dayDate))")
-            .foregroundColor(isToday(dayDate) ? .orange : .white)
+            .foregroundColor(isToday(dayDate) ? .white : .white)
             .font(.headline)
             .padding(.horizontal, 8)
             .background(
