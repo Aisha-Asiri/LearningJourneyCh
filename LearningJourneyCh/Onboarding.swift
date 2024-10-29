@@ -9,20 +9,16 @@
 import SwiftUI
 
 struct Onboarding: View {
-    @State private var learningGoal: String = ""
+    @AppStorage("learningGoal") var learningGoal: String = "Swift"
     @FocusState private var focus: Bool
+
     @AppStorage("selectedTimeFrame") var selectedTimeFrame: String = "Month"
 
     @AppStorage("isStart") var isStart: Bool = true
     
     
     var body: some View {
-        if isStart {
-            // If user has already started, go to CurrentDayView directly
-            CurrentDay()
-        } else {
-            // Main Page Content
-            NavigationStack {
+        NavigationView {
                 ZStack {
                     Color(.black)
                         .ignoresSafeArea(.all)
@@ -121,16 +117,15 @@ struct Onboarding: View {
                         }
                         // Navigation to CurrentDayView
                         NavigationLink(destination: CurrentDay()) {
-                            Button(action: {
-                                isStart.toggle()                            }) {
-                                    Text("Start →")
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundColor(.black)
-                                        .frame(width: 200, height: 50)
-                                        .background(Color.orange)
-                                        .cornerRadius(10)
-                                }
+                                                Text("Start →")
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundColor(.black)
+                                                    .frame(width: 200, height: 50)
+                                                    .background(Color.orange)
+                                                    .cornerRadius(10)
+                                            }
                         }
+                    .padding(.bottom, 100)
                         .simultaneousGesture(TapGesture().onEnded {
                             // Set the flag to true so the main page doesn't appear again
                             isStart = true
@@ -141,28 +136,11 @@ struct Onboarding: View {
                     
                     
                 }
-            }
-        }
-    }
-    
-    // Custom Button for Timeframe Selection
-    struct TimeframeButton: View {
-        let title: String
-        let isSelected: Bool
-        let action: () -> Void
         
-        var body: some View {
-            Button(action: action) {
-                Text(title)
-                    .foregroundColor(isSelected ? .black : .white)
-                    .padding()
-                    .background(isSelected ? Color.orange : Color(.systemGray6))
-                    .cornerRadius(10)
             }
         }
-    }
-}
-
+    
+    
 
 #Preview {
     Onboarding()

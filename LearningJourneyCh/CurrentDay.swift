@@ -10,8 +10,8 @@ import SwiftUI
 struct CurrentDay: View {
     @State private var selectedDay: String = ""
     @State private var learningGoal: String = "Swift"
-    @State private var streakCount: Int = 10
-    @State private var freezeCount: Int = 2
+    @State private var streakCount: Int = 0
+    @State private var freezeCount: Int = 0
     @State private var currentDate: Date = Date() // The current date
     @State private var selectedDate: Date = Date()  // Keep track of selected date as Date
     @State private var currentWeekStart: Date = Calendar.current.startOfWeek(for: Date())!
@@ -213,7 +213,7 @@ struct CurrentDay: View {
                                 streakCount += 1
                             }
                     }) {
-                        Text(isSelectedDateFrozen ? "Day Freezed" : (isSelectedDateLogged ? "Learned\nToday" : "Log today\nas Learned"))
+                        Text(isSelectedDateFrozen ? "Day              Freezed" : (isSelectedDateLogged ? "Learned\nToday" : "Log today\nas Learned"))
                                 .font(.system(size: 41, weight: .semibold))
                                 .foregroundColor(isSelectedDateFrozen ? .blue : (isSelectedDateLogged ? .orange : .black))
                                 .multilineTextAlignment(.center)
@@ -258,6 +258,8 @@ struct CurrentDay: View {
                 } //VStack
             } //ZStack
         }
+        .navigationBarBackButtonHidden(true)
+        
         .onAppear {
             // Set the current date as the default day
             selectedDay = getCurrentDateString()
@@ -287,6 +289,7 @@ struct DateCircle: View {
             .background(
                 Circle()
                     .fill(isLogged ? Color.orange.opacity(0.7) : (isFrozen ? Color.blue.opacity(0.7) : Color.clear))
+                    .frame(width: 44, height: 44)
             )
     }
 
@@ -317,4 +320,3 @@ private func isToday(_ day: String) -> Bool {
 #Preview {
     CurrentDay()
 }
-
