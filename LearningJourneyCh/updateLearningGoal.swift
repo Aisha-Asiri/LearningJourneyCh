@@ -95,3 +95,4 @@ struct CurrentDayContentView: View {
 #Preview {
     UpdateLearningGoal()
 }
+

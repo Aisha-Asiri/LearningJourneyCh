@@ -134,3 +134,4 @@ struct CurrentDayView: View {
 #Preview {
     Onboarding()
 }
+
